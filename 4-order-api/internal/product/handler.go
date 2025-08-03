@@ -66,6 +66,7 @@ func (h *ProductHandler) CreateProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[CreateProductRequest](w, r)
 		if err != nil {
+			response.JSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -100,7 +101,7 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 		product := body.ToProduct()
 		product.SetID(int64(id))
 
-		exists, err := h.ProductRepository.GetProductByID(uint(id))
+		_, err = h.ProductRepository.GetProductByID(uint(id))
 		if err != nil {
 			if errors.Is(err, ErrProductNotFound) {
 				response.JSON(w, "product not found", http.StatusNotFound)
@@ -111,12 +112,10 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 		}
 
 		var updatedProduct *Product
-		if exists != nil {
-			updatedProduct, err = h.ProductRepository.UpdateProduct(product)
-			if err != nil {
-				response.JSON(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		updatedProduct, err = h.ProductRepository.UpdateProduct(product)
+		if err != nil {
+			response.JSON(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		resp := updatedProduct.ToProductResponse()
@@ -134,7 +133,7 @@ func (h *ProductHandler) DeleteProduct() http.HandlerFunc {
 			return
 		}
 
-		exists, err := h.ProductRepository.GetProductByID(uint(id))
+		_, err = h.ProductRepository.GetProductByID(uint(id))
 		if err != nil {
 			if errors.Is(err, ErrProductNotFound) {
 				response.JSON(w, "product not found", http.StatusNotFound)
@@ -144,12 +143,10 @@ func (h *ProductHandler) DeleteProduct() http.HandlerFunc {
 			return
 		}
 
-		if exists != nil {
-			err = h.ProductRepository.DeleteProduct(uint(id))
-			if err != nil {
-				response.JSON(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		err = h.ProductRepository.DeleteProduct(uint(id))
+		if err != nil {
+			response.JSON(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		response.JSON(w, nil, http.StatusOK)

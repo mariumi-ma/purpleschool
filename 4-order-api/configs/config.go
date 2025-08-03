@@ -1,21 +1,21 @@
 package configs
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	Database struct {
-		Host     string
-		Port     string
-		User     string
-		Password string
-		Name     string
-		SSLMode  string
+		Host     string `validate:"required"`
+		Port     string `validate:"required"`
+		User     string `validate:"required"`
+		Password string `validate:"required"`
+		Name     string `validate:"required"`
+		SSLMode  string `validate:"required"`
 	}
 }
 
@@ -33,39 +33,19 @@ func LoadConfig() (*Config, error) {
 	config.Database.Name = os.Getenv("DB_NAME")
 	config.Database.SSLMode = os.Getenv("DB_SSLMODE")
 
-	if err := config.validate(); err != nil {
+	if err := validate(&config); err != nil {
 		return nil, fmt.Errorf("некорректные данные в конфигурации: %v", err)
 	}
 
 	return &config, nil
 }
 
-func (c *Config) validate() error {
-	var errs []error
+func validate[T any](body *T) error {
+	validate := validator.New()
 
-	if c.Database.Host == "" {
-		errs = append(errs, errors.New("поле host пустое"))
+	if err := validate.Struct(body); err != nil {
+		return err
 	}
 
-	if c.Database.Port == "" {
-		errs = append(errs, errors.New("поле host пустое"))
-	}
-
-	if c.Database.Password == "" {
-		errs = append(errs, errors.New("поле password пустое"))
-	}
-
-	if c.Database.User == "" {
-		errs = append(errs, errors.New("поле user пустое"))
-	}
-
-	if c.Database.Name == "" {
-		errs = append(errs, errors.New("поле name пустое"))
-	}
-
-	if c.Database.SSLMode == "" {
-		errs = append(errs, errors.New("поле ssl_mode пустое"))
-	}
-
-	return errors.Join(errs...)
+	return nil
 }
