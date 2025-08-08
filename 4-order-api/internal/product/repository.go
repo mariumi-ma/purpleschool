@@ -21,7 +21,7 @@ func NewProductRepository(db *database.Db) *ProductRepository {
 }
 
 func (r *ProductRepository) GetProductByID(id uint) (*Product, error) {
-	var product Product
+	var product *Product
 
 	result := r.Database.First(&product, id)
 	if result.Error != nil {
@@ -31,7 +31,7 @@ func (r *ProductRepository) GetProductByID(id uint) (*Product, error) {
 		return nil, result.Error
 	}
 
-	return &product, nil
+	return product, nil
 }
 
 func (r *ProductRepository) GetProducts() ([]Product, error) {

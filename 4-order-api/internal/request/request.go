@@ -5,21 +5,17 @@ import (
 	"io"
 	"net/http"
 
-	"purpleschool/internal/response"
-
 	"github.com/go-playground/validator/v10"
 )
 
 func HandleBody[T any](w http.ResponseWriter, r *http.Request) (*T, error) {
 	body, err := decode[T](r.Body)
 	if err != nil {
-		response.JSON(w, err.Error(), http.StatusBadRequest)
 		return nil, err
 	}
 
 	err = validate(&body)
 	if err != nil {
-		response.JSON(w, err.Error(), http.StatusBadRequest)
 		return nil, err
 	}
 
