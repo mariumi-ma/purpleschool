@@ -6,6 +6,7 @@ import (
 
 	"purpleschool/configs"
 	"purpleschool/internal/product"
+	"purpleschool/internal/user"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,5 +34,9 @@ func main() {
 
 	db.AutoMigrate(
 		&product.Product{},
+	)
+
+	db.AutoMigrate(
+		&user.User{},
 	)
 }

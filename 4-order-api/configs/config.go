@@ -17,6 +17,9 @@ type Config struct {
 		Name     string `validate:"required"`
 		SSLMode  string `validate:"required"`
 	}
+	Token struct {
+		SecretKey string `validate:"required"`
+	}
 }
 
 func LoadConfig() (*Config, error) {
@@ -32,6 +35,8 @@ func LoadConfig() (*Config, error) {
 	config.Database.Password = os.Getenv("DB_PASSWORD")
 	config.Database.Name = os.Getenv("DB_NAME")
 	config.Database.SSLMode = os.Getenv("DB_SSLMODE")
+
+	config.Token.SecretKey = os.Getenv("TOKEN_SECRET_KEY")
 
 	if err := validate(&config); err != nil {
 		return nil, fmt.Errorf("некорректные данные в конфигурации: %v", err)

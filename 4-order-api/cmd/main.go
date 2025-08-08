@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"purpleschool/configs"
+	"purpleschool/internal/auth"
 	"purpleschool/internal/database"
 	"purpleschool/internal/logger"
 	"purpleschool/internal/middleware"
 	"purpleschool/internal/product"
+	"purpleschool/internal/user"
 )
 
 func main() {
@@ -26,7 +28,15 @@ func main() {
 
 	router := http.NewServeMux()
 
+	// Repositories
 	productRepository := product.NewProductRepository(db)
+	userRepository := user.NewUserRepository(db)
+
+	// Services
+	authService := auth.NewAuthService(userRepository)
+
+	// Handlers
+	auth.NewAuthHandler(router, config, authService)
 	product.NewProductHandler(router, productRepository)
 
 	// Middleware
