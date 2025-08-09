@@ -28,6 +28,8 @@ func main() {
 
 	router := http.NewServeMux()
 
+	jwt := auth.NewJWT(config.Token.SecretKey)
+
 	// Repositories
 	productRepository := product.NewProductRepository(db)
 	userRepository := user.NewUserRepository(db)
@@ -40,7 +42,7 @@ func main() {
 	product.NewProductHandler(router, productRepository)
 
 	// Middleware
-	mw := middleware.NewMiddleware(log)
+	mw := middleware.NewMiddleware(log, jwt)
 	stack := mw.Chain(
 		mw.CORS,
 		mw.Logging,

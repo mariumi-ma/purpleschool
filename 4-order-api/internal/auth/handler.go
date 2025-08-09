@@ -62,7 +62,9 @@ func (h *AuthHandler) VerifyCode() http.HandlerFunc {
 			return
 		}
 
-		token, err := NewJWT(h.Config.Token.SecretKey).GenerateToken(user.SessionID)
+		token, err := NewJWT(h.Config.Token.SecretKey).GenerateToken(JWTData{
+			Phone: user.Phone,
+		})
 		if err != nil {
 			response.JSON(w, err.Error(), http.StatusInternalServerError)
 			return

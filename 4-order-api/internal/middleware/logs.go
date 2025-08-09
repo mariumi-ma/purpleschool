@@ -4,20 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"purpleschool/internal/logger"
-
 	"github.com/sirupsen/logrus"
 )
-
-type Middleware struct {
-	logger *logger.Logger
-}
-
-func NewMiddleware(l *logger.Logger) *Middleware {
-	return &Middleware{
-		logger: l,
-	}
-}
 
 func (m *Middleware) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
