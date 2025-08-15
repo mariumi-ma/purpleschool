@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"purpleschool/internal/ctxutils"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,7 +27,7 @@ func (m *Middleware) Logging(next http.Handler) http.Handler {
 			"path":        r.URL.Path,
 			"remote_addr": r.RemoteAddr,
 			"user_agent":  r.UserAgent(),
-			"request_id":  r.Context().Value("request_id"),
+			"request_id":  ctxutils.RequestID(r.Context()),
 		}).Info("Request completed")
 	})
 }

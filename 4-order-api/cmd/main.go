@@ -9,6 +9,7 @@ import (
 	"purpleschool/internal/database"
 	"purpleschool/internal/logger"
 	"purpleschool/internal/middleware"
+	"purpleschool/internal/order"
 	"purpleschool/internal/product"
 	"purpleschool/internal/user"
 )
@@ -33,20 +34,24 @@ func main() {
 	// Repositories
 	productRepository := product.NewProductRepository(db)
 	userRepository := user.NewUserRepository(db)
+	orderRepository := order.NewOrderRepository(db)
 
 	// Services
 	authService := auth.NewAuthService(userRepository)
 
-	// Handlers
-	auth.NewAuthHandler(router, config, authService)
-	product.NewProductHandler(router, productRepository)
-
 	// Middleware
 	mw := middleware.NewMiddleware(log, jwt)
 	stack := mw.Chain(
+		mw.SetRequestID,
+		mw.RecoverPanic,
 		mw.CORS,
 		mw.Logging,
 	)
+
+	// Handlers
+	auth.NewAuthHandler(router, config, authService)
+	product.NewProductHandler(router, productRepository)
+	order.NewOrderHandler(router, orderRepository, mw)
 
 	server := http.Server{
 		Addr:    ":8081",

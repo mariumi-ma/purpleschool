@@ -1,16 +1,12 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
+	"purpleschool/internal/ctxutils"
 	"purpleschool/internal/response"
 )
-
-type contextKey string
-
-const ContextphoneKey contextKey = "ContextphoneKey"
 
 func (m *Middleware) IsAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +26,7 @@ func (m *Middleware) IsAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ContextphoneKey, data.Phone)
+		ctx := ctxutils.WithUserID(r.Context(), data.UserID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
