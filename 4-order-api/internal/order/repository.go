@@ -2,6 +2,7 @@ package order
 
 import (
 	"errors"
+	"fmt"
 
 	"purpleschool/internal/database"
 	"purpleschool/internal/model"
@@ -42,28 +43,14 @@ func (r *OrderRepository) GetOrderByOrderIDAndUserID(orderID uint, userID uint) 
 func (r *OrderRepository) GetOrdersByUserID(userID uint) (model.Orders, error) {
 	var orders model.Orders
 
-	tx := r.Database.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	result := tx.Find(&orders).Where("user_id = ?", userID)
-	if result.Error != nil {
-		tx.Rollback()
-		return nil, result.Error
-	}
-
-	// Ищем связи с продуктами
-	if err := tx.Preload("Products").Find(&orders).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, err
+	err := r.Database.
+		Where("orders.user_id = ?", userID).
+		Joins("JOIN order_products ON orders.id = order_products.order_id").
+		Joins("JOIN products ON products.id = order_products.product_id").
+		Preload("Products").
+		Find(&orders).Error
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 
 	return orders, nil

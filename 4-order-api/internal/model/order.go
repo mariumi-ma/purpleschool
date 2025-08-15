@@ -22,7 +22,7 @@ type OrdersResponse struct {
 }
 
 type CreateOrderRequest struct {
-	ProductIDs []uint `json:"product_ids" validate:"required"`
+	ProductIDs []uint `json:"product_ids" validate:"required,min=1"`
 }
 
 type CreateOrderResponse struct {

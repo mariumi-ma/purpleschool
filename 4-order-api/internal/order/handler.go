@@ -50,7 +50,7 @@ func (h *OrderHandler) GetOrderByID() http.HandlerFunc {
 			return
 		}
 
-		response.JSON(w, order, http.StatusOK)
+		response.JSON(w, order.ToResponse(), http.StatusOK)
 	}
 }
 
