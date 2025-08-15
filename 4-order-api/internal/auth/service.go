@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 
+	"purpleschool/internal/model"
 	userModule "purpleschool/internal/user"
 )
 
@@ -25,7 +26,7 @@ func (s *AuthService) Auth(phone string) (string, error) {
 	}
 
 	if user == nil {
-		user = &userModule.User{
+		user = &model.User{
 			Phone: phone,
 		}
 
@@ -46,7 +47,7 @@ func (s *AuthService) Auth(phone string) (string, error) {
 	return user.SessionID, nil
 }
 
-func (s *AuthService) VerifyCode(sessionID, codeRequest string) (*userModule.User, error) {
+func (s *AuthService) VerifyCode(sessionID, codeRequest string) (*model.User, error) {
 	user, err := s.userRepository.GetCodeBySessionID(sessionID)
 	if err != nil {
 		if errors.Is(err, userModule.ErrSessionNotFound) {

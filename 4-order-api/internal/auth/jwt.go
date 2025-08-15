@@ -1,13 +1,15 @@
 package auth
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type JWT struct {
 	SecretKey string
 }
 
 type JWTData struct {
-	Phone string
+	UserID uint
 }
 
 func NewJWT(secretKey string) *JWT {
@@ -18,7 +20,7 @@ func NewJWT(secretKey string) *JWT {
 
 func (j *JWT) GenerateToken(data JWTData) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"phone": data.Phone,
+		"user_id": data.UserID,
 	})
 
 	return token.SignedString([]byte(j.SecretKey))
@@ -33,9 +35,18 @@ func (j *JWT) ParseToken(token string) (bool, *JWTData) {
 		return false, nil
 	}
 
-	phone := tokenClaims.Claims.(jwt.MapClaims)["phone"].(string)
+	// Обработка userID из токена
+	userID, ok := tokenClaims.Claims.(jwt.MapClaims)["user_id"]
+	if !ok {
+		return false, nil
+	}
+
+	userIDFloat, ok := userID.(float64)
+	if !ok {
+		return false, nil
+	}
 
 	return tokenClaims.Valid, &JWTData{
-		Phone: phone,
+		UserID: uint(userIDFloat),
 	}
 }

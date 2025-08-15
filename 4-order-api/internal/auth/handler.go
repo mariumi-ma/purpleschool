@@ -63,7 +63,7 @@ func (h *AuthHandler) VerifyCode() http.HandlerFunc {
 		}
 
 		token, err := NewJWT(h.Config.Token.SecretKey).GenerateToken(JWTData{
-			Phone: user.Phone,
+			UserID: user.ID,
 		})
 		if err != nil {
 			response.JSON(w, err.Error(), http.StatusInternalServerError)
