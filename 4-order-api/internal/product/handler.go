@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"purpleschool/internal/model"
 	"purpleschool/internal/request"
 	"purpleschool/internal/response"
 )
@@ -58,13 +59,13 @@ func (h *ProductHandler) GetProducts() http.HandlerFunc {
 			return
 		}
 
-		response.JSON(w, products, http.StatusOK)
+		response.JSON(w, products.ToResponse(), http.StatusOK)
 	}
 }
 
 func (h *ProductHandler) CreateProduct() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := request.HandleBody[CreateProductRequest](w, r)
+		body, err := request.HandleBody[model.CreateProductRequest](w, r)
 		if err != nil {
 			response.JSON(w, err.Error(), http.StatusBadRequest)
 			return
@@ -78,7 +79,7 @@ func (h *ProductHandler) CreateProduct() http.HandlerFunc {
 			return
 		}
 
-		resp := createdProduct.ToProductResponse()
+		resp := createdProduct.ToResponse()
 		response.JSON(w, resp, http.StatusCreated)
 	}
 }
@@ -93,7 +94,7 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 			return
 		}
 
-		body, err := request.HandleBody[UpdateProductRequest](w, r)
+		body, err := request.HandleBody[model.UpdateProductRequest](w, r)
 		if err != nil {
 			return
 		}
@@ -111,14 +112,14 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 			return
 		}
 
-		var updatedProduct *Product
+		var updatedProduct *model.Product
 		updatedProduct, err = h.ProductRepository.UpdateProduct(product)
 		if err != nil {
 			response.JSON(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		resp := updatedProduct.ToProductResponse()
+		resp := updatedProduct.ToResponse()
 		response.JSON(w, resp, http.StatusOK)
 	}
 }

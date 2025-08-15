@@ -5,8 +5,7 @@ import (
 	"log"
 
 	"purpleschool/configs"
-	"purpleschool/internal/product"
-	"purpleschool/internal/user"
+	"purpleschool/internal/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,10 +32,9 @@ func main() {
 	}
 
 	db.AutoMigrate(
-		&product.Product{},
+		&model.Product{},
+		&model.User{},
+		&model.Order{},
 	)
 
-	db.AutoMigrate(
-		&user.User{},
-	)
 }

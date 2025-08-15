@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"purpleschool/internal/database"
+	"purpleschool/internal/model"
 
 	"gorm.io/gorm"
 )
@@ -20,8 +21,8 @@ func NewProductRepository(db *database.Db) *ProductRepository {
 	}
 }
 
-func (r *ProductRepository) GetProductByID(id uint) (*Product, error) {
-	var product *Product
+func (r *ProductRepository) GetProductByID(id uint) (*model.Product, error) {
+	var product *model.Product
 
 	result := r.Database.First(&product, id)
 	if result.Error != nil {
@@ -34,8 +35,8 @@ func (r *ProductRepository) GetProductByID(id uint) (*Product, error) {
 	return product, nil
 }
 
-func (r *ProductRepository) GetProducts() ([]Product, error) {
-	var products []Product
+func (r *ProductRepository) GetProducts() (model.Products, error) {
+	var products model.Products
 
 	result := r.Database.Find(&products)
 	if result.Error != nil {
@@ -45,7 +46,7 @@ func (r *ProductRepository) GetProducts() ([]Product, error) {
 	return products, nil
 }
 
-func (r *ProductRepository) CreateProduct(product *Product) (*Product, error) {
+func (r *ProductRepository) CreateProduct(product *model.Product) (*model.Product, error) {
 	result := r.Database.Create(product)
 	if result.Error != nil {
 		return nil, result.Error
@@ -54,7 +55,7 @@ func (r *ProductRepository) CreateProduct(product *Product) (*Product, error) {
 	return product, nil
 }
 
-func (r *ProductRepository) UpdateProduct(product *Product) (*Product, error) {
+func (r *ProductRepository) UpdateProduct(product *model.Product) (*model.Product, error) {
 	result := r.Database.Updates(product)
 	if result.Error != nil {
 		return nil, result.Error
@@ -64,7 +65,7 @@ func (r *ProductRepository) UpdateProduct(product *Product) (*Product, error) {
 }
 
 func (r *ProductRepository) DeleteProduct(id uint) error {
-	result := r.Database.Delete(&Product{}, id)
+	result := r.Database.Delete(&model.Product{}, id)
 	if result.Error != nil {
 		return result.Error
 	}

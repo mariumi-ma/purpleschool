@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"purpleschool/internal/database"
+	"purpleschool/internal/model"
 
 	"gorm.io/gorm"
 )
@@ -21,8 +22,8 @@ func NewUserRepository(db *database.Db) *UserRepository {
 	}
 }
 
-func (r *UserRepository) FindUserByPhone(phone string) (*User, error) {
-	var user *User
+func (r *UserRepository) FindUserByPhone(phone string) (*model.User, error) {
+	var user *model.User
 
 	result := r.Database.First(&user, "phone = ?", phone)
 	if result.Error != nil {
@@ -35,8 +36,8 @@ func (r *UserRepository) FindUserByPhone(phone string) (*User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) GetCodeBySessionID(sessionID string) (*User, error) {
-	var user *User
+func (r *UserRepository) GetCodeBySessionID(sessionID string) (*model.User, error) {
+	var user *model.User
 
 	result := r.Database.First(&user, "session_id = ?", sessionID)
 	if result.Error != nil {
@@ -49,7 +50,7 @@ func (r *UserRepository) GetCodeBySessionID(sessionID string) (*User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) CreateUser(user *User) (*User, error) {
+func (r *UserRepository) CreateUser(user *model.User) (*model.User, error) {
 	result := r.Database.Create(user)
 	if result.Error != nil {
 		return nil, result.Error
@@ -58,7 +59,7 @@ func (r *UserRepository) CreateUser(user *User) (*User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) UpdateUser(user *User) (*User, error) {
+func (r *UserRepository) UpdateUser(user *model.User) (*model.User, error) {
 	result := r.Database.Updates(user)
 	if result.Error != nil {
 		return nil, result.Error
