@@ -1,2 +1,2 @@
 # Запуск миграций
-go run ./cmd/migration/main.go
+go run ./migrations/main.go

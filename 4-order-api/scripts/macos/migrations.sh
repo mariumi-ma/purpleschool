@@ -1,2 +1,2 @@
-# Запуск миграций
-go run ./migrations/auto.go
+# Запуск миграций 
+go run ./migrations/auto.go 
