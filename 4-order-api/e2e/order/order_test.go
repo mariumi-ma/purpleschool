@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,92 +12,143 @@ import (
 	"purpleschool/internal/app"
 	"purpleschool/internal/ctxutils"
 	"purpleschool/internal/model"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestCreateOrderSuccess(t *testing.T) {
+func TestCreateOrder(t *testing.T) {
 	//Prepare
-	db := initDB()
-	createTestData(db, t)
-
-	user, product := getTestData(db, t)
-	defer removeData(db, user.ID)
-
-	dataReq, err := json.Marshal(model.CreateOrderRequest{
-		ProductIDs: []uint{product.ID},
+	db := initDB(t)
+	user, product, _ := createTestData(db, t, false)
+	t.Cleanup(func() {
+		removeData(db, user.ID)
 	})
-	if err != nil {
-		t.Fatalf("Failed to marshal request: %v", err)
-	}
 
 	token, err := generateTestToken(user.ID)
-	if err != nil {
-		t.Fatalf("Failed to generate token: %v", err)
-	}
+	require.NoError(t, err, "Failed to generate token")
 
 	ctx := ctxutils.WithUserID(context.Background(), user.ID)
 
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/order", bytes.NewReader(dataReq))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	req = req.WithContext(ctx)
-
-	ap := app.App()
-	ap.ServeHTTP(w, req)
-
-	if w.Code != http.StatusCreated {
-		t.Errorf("expected: %d, got: %d", http.StatusCreated, w.Code)
+	testCases := []struct {
+		name           string
+		body           model.CreateOrderRequest
+		expectedStatus int
+	}{
+		{
+			name: "Success",
+			body: model.CreateOrderRequest{
+				ProductIDs: []uint{product.ID},
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name: "Empty body",
+			body: model.CreateOrderRequest{
+				ProductIDs: []uint{},
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
-	var resp model.CreateOrderResponse
-	err = json.Unmarshal(w.Body.Bytes(), &resp)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal response: %v", err)
-	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			requestBody, err := json.Marshal(tt.body)
+			require.NoError(t, err, "Failed to marshal request")
 
-	order := &model.Order{}
-	err = db.First(order, "id = ?", resp.OrderID).Error
-	if err != nil {
-		t.Fatalf("Failed to find order in DB: %v", err)
-	}
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/order", bytes.NewReader(requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+token)
+			req = req.WithContext(ctx)
 
-	if order.UserID != user.ID {
-		t.Errorf("expected user id: %d, got: %d", user.ID, order.UserID)
+			ap := app.App()
+			ap.ServeHTTP(w, req)
+
+			require.Equal(t, tt.expectedStatus, w.Code)
+
+			if tt.expectedStatus == http.StatusCreated {
+				var resp model.CreateOrderResponse
+				err = json.Unmarshal(w.Body.Bytes(), &resp)
+				require.NoError(t, err, "Failed to unmarshal request")
+
+				// Проверяем что заказ действительно создался в БД
+				order := &model.Order{}
+				err = db.First(order, "id = ?", resp.OrderID).Error
+				require.NoError(t, err, "Failed to find order in DB")
+
+				assert.Equal(t, user.ID, order.UserID)
+			}
+		})
 	}
 }
 
-func TestCreateOrderEmptyBody(t *testing.T) {
+func TestGetOrderByID(t *testing.T) {
 	//Prepare
-	db := initDB()
-	createTestData(db, t)
-
-	user, _ := getTestData(db, t)
-	defer removeData(db, user.ID)
-
-	dataReq, err := json.Marshal(model.CreateOrderRequest{
-		ProductIDs: []uint{},
+	db := initDB(t)
+	user, _, order := createTestData(db, t, true)
+	t.Cleanup(func() {
+		removeData(db, user.ID)
 	})
-	if err != nil {
-		t.Fatalf("Failed to marshal request: %v", err)
-	}
 
 	token, err := generateTestToken(user.ID)
-	if err != nil {
-		t.Fatalf("Failed to generate token: %v", err)
-	}
+	require.NoError(t, err, "Failed to generate token")
 
 	ctx := ctxutils.WithUserID(context.Background(), user.ID)
 
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/order", bytes.NewReader(dataReq))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	req = req.WithContext(ctx)
+	testCases := []struct {
+		name                    string
+		id                      string
+		expectedStatus          int
+		expectedSuccessResponse model.OrderResponse
+		expectedErrorResponse   string
+	}{
+		{
+			name:                    "Success",
+			id:                      fmt.Sprintf("%d", order.ID),
+			expectedStatus:          http.StatusOK,
+			expectedSuccessResponse: order.ToResponse(),
+		},
+		{
+			name:                  "Invalid ID",
+			id:                    "invalid",
+			expectedStatus:        http.StatusBadRequest,
+			expectedErrorResponse: "invalid id",
+		},
+		{
+			name:                  "Order Not Found",
+			id:                    fmt.Sprintf("%d", 11111111),
+			expectedStatus:        http.StatusNotFound,
+			expectedErrorResponse: "order not found",
+		},
+	}
 
-	ap := app.App()
-	ap.ServeHTTP(w, req)
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
 
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("expected: %d, got: %d", http.StatusBadRequest, w.Code)
+			url := fmt.Sprintf("/order/%s", tt.id)
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", url, nil)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+token)
+			req = req.WithContext(ctx)
+
+			ap := app.App()
+			ap.ServeHTTP(w, req)
+
+			var resp []byte
+			if tt.expectedStatus == http.StatusOK {
+				resp, err = json.Marshal(tt.expectedSuccessResponse)
+				require.NoError(t, err, "Failed to unmarshal response")
+			} else {
+				resp, err = json.Marshal(tt.expectedErrorResponse)
+				require.NoError(t, err, "Failed to unmarshal response")
+			}
+
+			require.Equal(t, tt.expectedStatus, w.Code)
+			require.JSONEq(t, string(resp), w.Body.String())
+		},
+		)
 	}
 }
