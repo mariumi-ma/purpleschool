@@ -96,6 +96,8 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 
 		body, err := request.HandleBody[model.UpdateProductRequest](w, r)
 		if err != nil {
+			// TODO:
+			// response.JSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
