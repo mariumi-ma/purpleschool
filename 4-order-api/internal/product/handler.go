@@ -96,8 +96,6 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 
 		body, err := request.HandleBody[model.UpdateProductRequest](w, r)
 		if err != nil {
-			// TODO:
-			// response.JSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -115,7 +113,13 @@ func (h *ProductHandler) UpdateProduct() http.HandlerFunc {
 		}
 
 		var updatedProduct *model.Product
-		updatedProduct, err = h.ProductRepository.UpdateProduct(product)
+		_, err = h.ProductRepository.UpdateProduct(product)
+		if err != nil {
+			response.JSON(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		updatedProduct, err = h.ProductRepository.GetProductByID(uint(id))
 		if err != nil {
 			response.JSON(w, err.Error(), http.StatusInternalServerError)
 			return
