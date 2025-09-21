@@ -1,4 +1,4 @@
 /postgres-data
 .env
-/e2e/order/.env
+/e2e/.env
 docker-compose.yaml

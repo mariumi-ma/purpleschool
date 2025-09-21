@@ -1,20 +1,23 @@
-# purpleschool
+### E-Commerce Backend API (Go)
+Backend service in Go for an e-commerce platform with code-based authorization. The service generates verification codes and validates them, emulating the SMS login process. It includes product management and protected endpoints for order placement.
 
-## Для Windows (PowerShell)
-1. Откройте PowerShell в корне проекта
-2. Выполните:
-```powershell
-# Запуск приложения
+## For Windows (PowerShell)
+1. Open PowerShell in the project root directory
+# Start the application
 .\scripts\windows\run.ps1
-# Выполнение миграций
+# Run migrations
 .\scripts\windows\migrations.ps1
 
-## Для masOS 
-1. Задаём права для выполнения скриптов
+## For macOS 
+1. Make scripts executable
 chmod +x scripts/macos/*.sh
-# Запуск приложения
+# Start the application
 ./scripts/macos/run.sh
-# Выполнение миграций
+# Run migrations
 ./scripts/macos/migrations.sh
 
-## Для запуска e2e теста, необходимо создать тестовую базу данных и на ней выполнить миграции, указав в файле конфигурации .env данные для тестовой базы. 
+# Before running e2e tests:
+1. Create a test database
+2. Run migrations against it
+3. Configure test database connection in the .env file
+4. Create a .env file in the e2e directory
